@@ -1,0 +1,80 @@
+name: Update Formula
+
+on:
+  repository_dispatch:
+    types: [update-formula]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    name: Update formula
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Update formula version and checksums
+        env:
+          FORMULA: ${{ github.event.client_payload.formula }}
+          VERSION: ${{ github.event.client_payload.version }}
+          SHA_MACOS_X86_64: ${{ github.event.client_payload.sha_macos_x86_64 }}
+          SHA_MACOS_AARCH64: ${{ github.event.client_payload.sha_macos_aarch64 }}
+          SHA_LINUX_X86_64: ${{ github.event.client_payload.sha_linux_x86_64 }}
+          SHA_LINUX_AARCH64: ${{ github.event.client_payload.sha_linux_aarch64 }}
+        run: |
+          # Validate inputs: formula name must be alphanumeric+hyphens, version semver-like, shas hex
+          if ! echo "$FORMULA" | grep -qE '^[a-z0-9-]+$'; then
+            echo "::error::Invalid formula name"
+            exit 1
+          fi
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+'; then
+            echo "::error::Invalid version format"
+            exit 1
+          fi
+          for sha in "$SHA_MACOS_X86_64" "$SHA_MACOS_AARCH64" "$SHA_LINUX_X86_64" "$SHA_LINUX_AARCH64"; do
+            if ! echo "$sha" | grep -qE '^[0-9a-f]{64}$'; then
+              echo "::error::Invalid SHA256 hash"
+              exit 1
+            fi
+          done
+
+          FORMULA_FILE="Formula/${FORMULA}.rb"
+          if [ ! -f "$FORMULA_FILE" ]; then
+            echo "::error::Formula not found: ${FORMULA_FILE}"
+            exit 1
+          fi
+
+          OLD_VERSION=$(grep -m1 'version "' "$FORMULA_FILE" | sed 's/.*version "\(.*\)"/\1/')
+          echo "Updating ${FORMULA} from ${OLD_VERSION} to ${VERSION}"
+
+          sed -i "s/version \"${OLD_VERSION}\"/version \"${VERSION}\"/" "$FORMULA_FILE"
+
+          # Replace SHA256 values in order (macos-intel, macos-arm, linux-intel, linux-arm)
+          python3 - "$FORMULA_FILE" "$SHA_MACOS_X86_64" "$SHA_MACOS_AARCH64" "$SHA_LINUX_X86_64" "$SHA_LINUX_AARCH64" <<'PYTHON'
+          import sys, re
+          path, *new_shas = sys.argv[1:]
+          with open(path) as f:
+              content = f.read()
+          matches = list(re.finditer(r'sha256 "[0-9a-f]{64}"', content))
+          if len(matches) != len(new_shas):
+              print(f"::error::Expected {len(new_shas)} sha256 entries, found {len(matches)}")
+              sys.exit(1)
+          for match, new_sha in reversed(list(zip(matches, new_shas))):
+              content = content[:match.start()] + f'sha256 "{new_sha}"' + content[match.end():]
+          with open(path, 'w') as f:
+              f.write(content)
+          print(f"Updated {len(new_shas)} checksums")
+          PYTHON
+
+      - name: Commit and push
+        env:
+          FORMULA: ${{ github.event.client_payload.formula }}
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "Formula/${FORMULA}.rb"
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: update ${FORMULA} to ${VERSION}"
+          git push
