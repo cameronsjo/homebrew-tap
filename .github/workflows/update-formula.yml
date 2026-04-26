@@ -7,6 +7,18 @@ on:
 permissions:
   contents: write
 
+# Serialize formula updates. Two dispatches arriving close together (e.g. a
+# stable release and its beta partner from the same source repo) both check
+# out the same commit, both write to different formula files, both try to
+# push. First wins; second's push is rejected because the remote moved.
+#
+# cancel-in-progress is FALSE because we want each update to land — they
+# target different formula files and aren't superseded by later dispatches.
+# Setting it true would lose updates whenever two arrive close together.
+concurrency:
+  group: update-formula
+  cancel-in-progress: false
+
 jobs:
   update:
     name: Update formula
