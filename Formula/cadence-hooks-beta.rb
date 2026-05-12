@@ -4,7 +4,7 @@
 class CadenceHooksBeta < Formula
   desc "Cadence hooks (beta channel) — prerelease builds for testing"
   homepage "https://github.com/cameronsjo/cadence-hooks"
-  version "0.9.0-beta.6"
+  version "0.9.0-beta.7"
   license "BSL-1.1"
 
   conflicts_with "cadence-hooks", because: "both install a `cadence-hooks` binary"
@@ -12,7 +12,7 @@ class CadenceHooksBeta < Formula
   on_macos do
     if Hardware::CPU.intel?
       url "https://github.com/cameronsjo/cadence-hooks/releases/download/v#{version}/cadence-hooks-v#{version}-macos-x86_64.tar.gz"
-      sha256 "249c36e200ab72f92fe9beedd3576697c3bb038a5101ebc4761659a23258e0d2"
+      sha256 "525f6848463af7bfa3d67302e24195038ab03a0aaa1cc392cdbb4431eeb33a0b"
 
       def install
         bin.install "cadence-hooks"
@@ -20,7 +20,7 @@ class CadenceHooksBeta < Formula
     end
     if Hardware::CPU.arm?
       url "https://github.com/cameronsjo/cadence-hooks/releases/download/v#{version}/cadence-hooks-v#{version}-macos-aarch64.tar.gz"
-      sha256 "74075a69a74d9b934a78503ef37bceb226c6e6d44af6a392462695ad70db952b"
+      sha256 "e0ae08dd4529eca72105b36b6c9537b2d6fcf904588b4924ba5ce27a56a22705"
 
       def install
         bin.install "cadence-hooks"
@@ -31,7 +31,7 @@ class CadenceHooksBeta < Formula
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
       url "https://github.com/cameronsjo/cadence-hooks/releases/download/v#{version}/cadence-hooks-v#{version}-linux-x86_64.tar.gz"
-      sha256 "6d06079d0deea5eb6d9503c3125d4297dade49f1918297d1155e3972dcbc5488"
+      sha256 "cc360c79926be5ee2e1453c6c6eb3e88fa8b007695008915ef1b37aac50a18ec"
 
       def install
         bin.install "cadence-hooks"
@@ -39,7 +39,7 @@ class CadenceHooksBeta < Formula
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
       url "https://github.com/cameronsjo/cadence-hooks/releases/download/v#{version}/cadence-hooks-v#{version}-linux-aarch64.tar.gz"
-      sha256 "48bfd83f87bc483f5d0c847f4649d04b0405aa4f48044dc12b98b6a1e3a31e16"
+      sha256 "5cda16cca75f7e11379ac418707dbb091b6fd001cb0cd6e914d56dc4cf73726e"
 
       def install
         bin.install "cadence-hooks"
