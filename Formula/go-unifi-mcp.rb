@@ -5,21 +5,21 @@
 class GoUnifiMcp < Formula
   desc "MCP server for UniFi Network Controller"
   homepage "https://github.com/cameronsjo/go-unifi-mcp"
-  version "0.3.1"
+  version "0.4.0"
   license "MPL-2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/cameronsjo/go-unifi-mcp/releases/download/v0.3.1/go-unifi-mcp_darwin_amd64.tar.gz"
-      sha256 "0c496cdf3fa6124d49f027fcb3c2c411ce3ae73ed3627cdb535bc880d8903fc5"
+      url "https://github.com/cameronsjo/go-unifi-mcp/releases/download/v0.4.0/go-unifi-mcp_darwin_amd64.tar.gz"
+      sha256 "50ad55e1be5815735e7e6c85e7fa5233e7e19895d8d67aebcd4cb01bba4e14e0"
 
       def install
         bin.install "go-unifi-mcp"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/cameronsjo/go-unifi-mcp/releases/download/v0.3.1/go-unifi-mcp_darwin_arm64.tar.gz"
-      sha256 "c7899655101293c875183059a48aa8bafef6047efbd621c2e295f6e5f3a92611"
+      url "https://github.com/cameronsjo/go-unifi-mcp/releases/download/v0.4.0/go-unifi-mcp_darwin_arm64.tar.gz"
+      sha256 "86a9428897802d17f4838c40a4807f3911731e4835be526a759dec8e278f5943"
 
       def install
         bin.install "go-unifi-mcp"
@@ -29,15 +29,15 @@ class GoUnifiMcp < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/cameronsjo/go-unifi-mcp/releases/download/v0.3.1/go-unifi-mcp_linux_amd64.tar.gz"
-      sha256 "fc114420171ca3f6eaede206821a8d10f7eb8928c4be5e1454228d5b2a433fda"
+      url "https://github.com/cameronsjo/go-unifi-mcp/releases/download/v0.4.0/go-unifi-mcp_linux_amd64.tar.gz"
+      sha256 "79d6d400d0802d9ac98966290231ec699dac60477f31946a75fa5652dea7151b"
       def install
         bin.install "go-unifi-mcp"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/cameronsjo/go-unifi-mcp/releases/download/v0.3.1/go-unifi-mcp_linux_arm64.tar.gz"
-      sha256 "c83220b89836bd0689ee8633fd3690fb776f2ee0492edb5d9d31d80733881892"
+      url "https://github.com/cameronsjo/go-unifi-mcp/releases/download/v0.4.0/go-unifi-mcp_linux_arm64.tar.gz"
+      sha256 "46f2f89d3894ffb9a53129b48819c9b518df97b0fe2ea8783e2aa37727830064"
       def install
         bin.install "go-unifi-mcp"
       end
