@@ -26,6 +26,62 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      # Verify-before-pin gate. A repository_dispatch payload is
+      # attacker-settable (client_payload.* — anyone who can POST a dispatch
+      # controls every field), so before mutating the formula we prove the
+      # artifacts this version will pin are genuine:
+      #   1. valid SLSA build provenance from the source repo's release
+      #      workflow (fails closed if absent/invalid), and
+      #   2. the dispatch-supplied SHA256s actually match those genuine
+      #      artifacts — defeating a tampered-SHA dispatch.
+      # cadence-hooks is a security-control binary in the agentic harness; a
+      # bad pin would silently swap out the guardrail enforcer. Scoped to
+      # cadence-hooks (the formula that publishes provenance); other formulae
+      # skip this gate until they publish attestations too.
+      - name: Verify release provenance (cadence-hooks)
+        if: github.event.client_payload.formula == 'cadence-hooks'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.client_payload.version }}
+          SHA_MACOS_X86_64: ${{ github.event.client_payload.sha_macos_x86_64 }}
+          SHA_MACOS_AARCH64: ${{ github.event.client_payload.sha_macos_aarch64 }}
+          SHA_LINUX_X86_64: ${{ github.event.client_payload.sha_linux_x86_64 }}
+          SHA_LINUX_AARCH64: ${{ github.event.client_payload.sha_linux_aarch64 }}
+        run: |
+          SRC_REPO="cameronsjo/cadence-hooks"
+          TAG="v${VERSION}"
+          mkdir -p verify-tmp
+          gh release download "$TAG" -R "$SRC_REPO" \
+            --pattern 'cadence-hooks-v*.tar.gz' --dir verify-tmp
+
+          # Each platform maps to the dispatch-supplied SHA we are about to pin.
+          declare -A EXPECTED=(
+            ["macos-x86_64"]="$SHA_MACOS_X86_64"
+            ["macos-aarch64"]="$SHA_MACOS_AARCH64"
+            ["linux-x86_64"]="$SHA_LINUX_X86_64"
+            ["linux-aarch64"]="$SHA_LINUX_AARCH64"
+          )
+          for platform in "${!EXPECTED[@]}"; do
+            file="verify-tmp/cadence-hooks-${TAG}-${platform}.tar.gz"
+            if [ ! -f "$file" ]; then
+              echo "::error::Release artifact missing: ${file}"
+              exit 1
+            fi
+            # Provenance: artifact must be attested by the source repo's release
+            # workflow. gh attestation verify exits non-zero (fails closed) if
+            # the attestation is absent or does not validate.
+            gh attestation verify "$file" -R "$SRC_REPO"
+            # Pin integrity: the SHA the dispatch told us to pin must equal the
+            # genuine artifact's SHA.
+            actual=$(sha256sum "$file" | awk '{print $1}')
+            if [ "$actual" != "${EXPECTED[$platform]}" ]; then
+              echo "::error::SHA mismatch for ${platform}: dispatch=${EXPECTED[$platform]} actual=${actual}"
+              exit 1
+            fi
+            echo "verified ${platform}: provenance OK, sha matches"
+          done
+          rm -rf verify-tmp
+
       - name: Update formula version and checksums
         env:
           FORMULA: ${{ github.event.client_payload.formula }}
