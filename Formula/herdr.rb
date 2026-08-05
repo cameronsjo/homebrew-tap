@@ -10,9 +10,10 @@
 # build fails to link (herdrdev/herdr#285). The release binaries are produced on
 # GitHub runners with Homebrew's zig@0.15.
 #
-# Apple Silicon only as of 0.8.0-palette.2: the x86_64 build fails on undefined
-# ghostty_* symbols from zig's x86_64 output, a separate breakage from the
-# archive alignment fix that release carries.
+# Apple Silicon only as of 0.8.0-palette.2 — every consumer of this tap runs
+# arm64 macOS, so the fork builds that target alone. (The x86_64 build also
+# fails, on undefined ghostty_* symbols from zig's x86_64 output, but the
+# reason not to ship it is that nobody needs it.)
 class Herdr < Formula
   desc "Terminal agent runtime, with a command palette (fork build)"
   homepage "https://github.com/cameronsjo/herdr"
