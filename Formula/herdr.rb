@@ -9,21 +9,20 @@
 # 0.15.2, whose bundled libSystem is older than the macOS 26 SDK, so a native
 # build fails to link (herdrdev/herdr#285). The release binaries are produced on
 # GitHub runners with Homebrew's zig@0.15.
+#
+# Apple Silicon only as of 0.8.0-palette.2: the x86_64 build fails on undefined
+# ghostty_* symbols from zig's x86_64 output, a separate breakage from the
+# archive alignment fix that release carries.
 class Herdr < Formula
   desc "Terminal agent runtime, with a command palette (fork build)"
   homepage "https://github.com/cameronsjo/herdr"
-  version "0.8.0-palette1"
+  version "0.8.0-palette.2"
   license "Apache-2.0"
 
   on_macos do
     on_arm do
-      url "https://github.com/cameronsjo/herdr/releases/download/v0.8.0-palette1/herdr-macos-aarch64"
-      sha256 "904e0ebb4a8496729264c84ac90656716944782c6f48b8d92852e1b98e40201f"
-    end
-
-    on_intel do
-      url "https://github.com/cameronsjo/herdr/releases/download/v0.8.0-palette1/herdr-macos-x86_64"
-      sha256 "b5102850a41c6cdb8ed36a6380fbf6e31f6be9530043b31c99bae3e227f7d85d"
+      url "https://github.com/cameronsjo/herdr/releases/download/v0.8.0-palette.2/herdr-macos-aarch64"
+      sha256 "ae9077763143462895822ac879b16bd964d07ac6c0052fc6f82991cae9369c82"
     end
   end
 
