@@ -17,7 +17,7 @@
 class Herdr < Formula
   desc "Terminal agent runtime, with a command palette (fork build)"
   homepage "https://github.com/cameronsjo/herdr"
-  version "0.8.0-palette.3"
+  version "0.8.0-palette.4"
   license "Apache-2.0"
 
   on_macos do
