@@ -82,6 +82,31 @@ jobs:
           done
           rm -rf verify-tmp
 
+      # herdr publishes no build attestations, so it cannot pass the gate above.
+      # It still gets the half that defeats a tampered-sha dispatch: download the
+      # asset the formula is about to point at and confirm it hashes to what the
+      # dispatch claims. Without this the receiver takes both the version and the
+      # checksum on faith, and brew would then "verify" an attacker-supplied
+      # binary against an attacker-supplied checksum.
+      - name: Verify dispatched sha matches the published asset (herdr)
+        if: github.event.client_payload.formula == 'herdr'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.client_payload.version }}
+          SHA_MACOS_AARCH64: ${{ github.event.client_payload.sha_macos_aarch64 }}
+        run: |
+          SRC_REPO="cameronsjo/herdr"
+          ASSET="herdr-macos-aarch64"
+          mkdir -p verify-tmp
+          gh release download "v${VERSION}" -R "$SRC_REPO" --pattern "$ASSET" --dir verify-tmp
+          actual=$(sha256sum "verify-tmp/${ASSET}" | awk '{print $1}')
+          if [ "$actual" != "$SHA_MACOS_AARCH64" ]; then
+            echo "::error::SHA mismatch for herdr macos-aarch64: dispatch=${SHA_MACOS_AARCH64} actual=${actual}"
+            exit 1
+          fi
+          echo "verified herdr macos-aarch64: sha matches the published release asset"
+          rm -rf verify-tmp
+
       - name: Update formula version and checksums
         env:
           FORMULA: ${{ github.event.client_payload.formula }}
@@ -91,35 +116,97 @@ jobs:
           SHA_LINUX_X86_64: ${{ github.event.client_payload.sha_linux_x86_64 }}
           SHA_LINUX_AARCH64: ${{ github.event.client_payload.sha_linux_aarch64 }}
         run: |
-          # Validate inputs: formula name must be alphanumeric+hyphens, version semver-like, shas hex
-          if ! echo "$FORMULA" | grep -qE '^[a-z0-9-]+$'; then
+          # Validate inputs with bash regex, NOT grep. `grep -qE` succeeds when
+          # ANY line matches, and client_payload is JSON that can carry a
+          # newline, so a line-oriented check validates the first line and lets
+          # the rest through. `[[ =~ ]]` matches the whole string.
+          #
+          # The version pattern is anchored at BOTH ends. It previously ended
+          # after the third numeric group, leaving everything past it
+          # unconstrained — and $VERSION is written verbatim into a double-quoted
+          # Ruby string in the formula, which every `brew` command evaluates when
+          # it loads the tap. A version of 1.2.3#{`…`} was arbitrary code
+          # execution on any machine with this tap tapped.
+          if [[ ! "$FORMULA" =~ ^[a-z0-9-]+$ ]]; then
             echo "::error::Invalid formula name"
             exit 1
           fi
-          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+'; then
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.+][0-9A-Za-z.-]+)?$ ]]; then
             echo "::error::Invalid version format"
             exit 1
           fi
-          for sha in "$SHA_MACOS_X86_64" "$SHA_MACOS_AARCH64" "$SHA_LINUX_X86_64" "$SHA_LINUX_AARCH64"; do
-            if ! echo "$sha" | grep -qE '^[0-9a-f]{64}$'; then
-              echo "::error::Invalid SHA256 hash"
-              exit 1
-            fi
-          done
-
+          # Collect the shas that were actually supplied, in formula file order.
+          # Not every formula is four-platform: herdr ships a single arm64 macOS
+          # binary. An omitted platform is skipped; a malformed one still fails.
+          # The count is not checked here — the Python below requires it to equal
+          # the formula's sha256 occurrences, so a partial payload for a
+          # multi-platform formula fails closed rather than pinning stale hashes.
           FORMULA_FILE="Formula/${FORMULA}.rb"
           if [ ! -f "$FORMULA_FILE" ]; then
             echo "::error::Formula not found: ${FORMULA_FILE}"
             exit 1
           fi
 
+          # Collect the shas that were actually supplied, in formula file order.
+          # Not every formula is four-platform: herdr ships a single arm64 macOS
+          # binary. An omitted platform is skipped; a malformed one still fails.
+          #
+          # Each supplied platform must also appear in the formula, and every
+          # platform the formula names must be supplied. Without that bijection
+          # the mapping is by COUNT alone, so a formula with two entries could
+          # receive two shas from the wrong platform slots and pin each to the
+          # wrong line — accepted silently, and only failing later on a user's
+          # machine when brew's checksum disagrees.
+          SHAS=()
+          for pair in \
+            "macos-x86_64:$SHA_MACOS_X86_64" \
+            "macos-aarch64:$SHA_MACOS_AARCH64" \
+            "linux-x86_64:$SHA_LINUX_X86_64" \
+            "linux-aarch64:$SHA_LINUX_AARCH64"; do
+            platform=${pair%%:*}
+            sha=${pair#*:}
+            in_formula=no
+            grep -q -- "$platform" "$FORMULA_FILE" && in_formula=yes
+            if [ -z "$sha" ]; then
+              if [ "$in_formula" = yes ]; then
+                echo "::error::${FORMULA_FILE} builds for ${platform} but the dispatch supplied no sha for it"
+                exit 1
+              fi
+              continue
+            fi
+            if [[ ! "$sha" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "::error::Invalid SHA256 hash"
+              exit 1
+            fi
+            if [ "$in_formula" = no ]; then
+              echo "::error::dispatch supplied a ${platform} sha but ${FORMULA_FILE} has no such platform"
+              exit 1
+            fi
+            SHAS+=("$sha")
+          done
+          if [ ${#SHAS[@]} -eq 0 ]; then
+            echo "::error::No SHA256 hashes supplied"
+            exit 1
+          fi
+
           OLD_VERSION=$(grep -m1 'version "' "$FORMULA_FILE" | sed 's/.*version "\(.*\)"/\1/')
+          if [ -z "$OLD_VERSION" ]; then
+            echo "::error::Could not read the current version from ${FORMULA_FILE}"
+            exit 1
+          fi
           echo "Updating ${FORMULA} from ${OLD_VERSION} to ${VERSION}"
 
-          sed -i "s/version \"${OLD_VERSION}\"/version \"${VERSION}\"/" "$FORMULA_FILE"
+          sed -i "s|version \"${OLD_VERSION}\"|version \"${VERSION}\"|" "$FORMULA_FILE"
+          # An empty or unmatched OLD_VERSION would make the sed a silent no-op
+          # and still rewrite the shas, pinning new hashes against the old URL.
+          if ! grep -q "version \"${VERSION}\"" "$FORMULA_FILE"; then
+            echo "::error::version rewrite did not take effect in ${FORMULA_FILE}"
+            exit 1
+          fi
 
-          # Replace SHA256 values in order (macos-intel, macos-arm, linux-intel, linux-arm)
-          python3 - "$FORMULA_FILE" "$SHA_MACOS_X86_64" "$SHA_MACOS_AARCH64" "$SHA_LINUX_X86_64" "$SHA_LINUX_AARCH64" <<'PYTHON'
+          # Replace SHA256 values in order (macos-intel, macos-arm, linux-intel, linux-arm),
+          # restricted to the platforms this dispatch actually supplied.
+          python3 - "$FORMULA_FILE" "${SHAS[@]}" <<'PYTHON'
           import sys, re
           path, *new_shas = sys.argv[1:]
           with open(path) as f:
