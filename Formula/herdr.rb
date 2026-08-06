@@ -22,7 +22,10 @@ class Herdr < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/cameronsjo/herdr/releases/download/v0.8.0-palette.3/herdr-macos-aarch64"
+      # v#{version}, not a literal — the update-formula automation rewrites
+      # `version` and the sha256 but never the url, so a hardcoded version here
+      # would leave every automated bump pointing at the previous release.
+      url "https://github.com/cameronsjo/herdr/releases/download/v#{version}/herdr-macos-aarch64"
       sha256 "ae9077763143462895822ac879b16bd964d07ac6c0052fc6f82991cae9369c82"
     end
   end
