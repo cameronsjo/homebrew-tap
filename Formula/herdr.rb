@@ -17,12 +17,12 @@
 class Herdr < Formula
   desc "Terminal agent runtime, with a command palette (fork build)"
   homepage "https://github.com/cameronsjo/herdr"
-  version "0.8.0-palette.2"
+  version "0.8.0-palette.3"
   license "Apache-2.0"
 
   on_macos do
     on_arm do
-      url "https://github.com/cameronsjo/herdr/releases/download/v0.8.0-palette.2/herdr-macos-aarch64"
+      url "https://github.com/cameronsjo/herdr/releases/download/v0.8.0-palette.3/herdr-macos-aarch64"
       sha256 "ae9077763143462895822ac879b16bd964d07ac6c0052fc6f82991cae9369c82"
     end
   end
