@@ -17,7 +17,7 @@
 class Herdr < Formula
   desc "Terminal agent runtime, with a command palette (fork build)"
   homepage "https://github.com/cameronsjo/herdr"
-  version "0.8.2-palette.3"
+  version "0.8.2-palette.4"
   license "Apache-2.0"
 
   on_macos do
@@ -26,7 +26,7 @@ class Herdr < Formula
       # `version` and the sha256 but never the url, so a hardcoded version here
       # would leave every automated bump pointing at the previous release.
       url "https://github.com/cameronsjo/herdr/releases/download/v#{version}/herdr-macos-aarch64"
-      sha256 "7a6885eb1900bc066efc33fc4aedb4e5470401e27882a22dd62cee0e655fbca9"
+      sha256 "528a902840426cd6102397d31f6b16e63a26616b87383eb3231befbfc0048a69"
     end
   end
 
