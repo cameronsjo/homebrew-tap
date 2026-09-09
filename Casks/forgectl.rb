@@ -24,11 +24,9 @@ cask "forgectl" do
   binary "forgectl"
   binary "forgectl-bless-helper"
 
-  postflight do
-    if OS.mac?
-      system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/forgectl"]
-      system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/forgectl-bless-helper"]
-    end
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{staged_path}}/forgectl"]
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{staged_path}}/forgectl-bless-helper"]
   end
 
   # No zap stanza required
