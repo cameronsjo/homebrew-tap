@@ -7,15 +7,15 @@ cask "forgectl" do
     end
   end
 
-  version "0.37.0"
+  version "0.38.0"
 
   on_macos do
     on_arm do
-      sha256 "132be6353741bb80e0bd6e2328e6a98ff574fe166693a1a1aae5def74f143d50"
+      sha256 "a132dcfc2fe4cd36d5380ff8d113e082e781540d7cd9223a86b9bf0a6b19fe65"
       url "https://github.com/cameronsjo/forgectl/releases/download/v#{version}/forgectl_#{version}_darwin_arm64.tar.gz"
     end
     on_intel do
-      sha256 "0a374d6c03416474a2a0b6ee20df1241a3984d6c02edd556464e762f3dad92b6"
+      sha256 "645a576430e6cba47c8d651bceae81922b4fa30ca349ab62772d4196d48bcf79"
       url "https://github.com/cameronsjo/forgectl/releases/download/v#{version}/forgectl_#{version}_darwin_amd64.tar.gz"
     end
   end
