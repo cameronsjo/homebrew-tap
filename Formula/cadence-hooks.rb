@@ -4,13 +4,13 @@
 class CadenceHooks < Formula
   desc "Compiled enforcement hooks for cadence, git-guardrails, rules, and obsidian plugins"
   homepage "https://github.com/cameronsjo/cadence-hooks"
-  version "0.132.0"
+  version "0.132.1"
   license "BSL-1.1"
 
   on_macos do
     if Hardware::CPU.intel?
       url "https://github.com/cameronsjo/cadence-hooks/releases/download/v#{version}/cadence-hooks-v#{version}-macos-x86_64.tar.gz"
-      sha256 "72cf4d52252f32d847566e31988b46449d71173c096b33c01f740fcdda601012"
+      sha256 "2f971cfafd783383bca71dcbdc09bd6d6d47761b20c715ca49d12a77f7d00f13"
 
       def install
         bin.install "cadence-hooks"
@@ -18,7 +18,7 @@ class CadenceHooks < Formula
     end
     if Hardware::CPU.arm?
       url "https://github.com/cameronsjo/cadence-hooks/releases/download/v#{version}/cadence-hooks-v#{version}-macos-aarch64.tar.gz"
-      sha256 "c99028626d212098b641f0e3e647bf3f3a8b795d77e33a2c5dc16a4fb6882405"
+      sha256 "b7bd04fe62e521ec766f0aa129804fcaa6628c720c4c4a10e4d17fdc4a7f01f1"
 
       def install
         bin.install "cadence-hooks"
@@ -29,7 +29,7 @@ class CadenceHooks < Formula
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
       url "https://github.com/cameronsjo/cadence-hooks/releases/download/v#{version}/cadence-hooks-v#{version}-linux-x86_64.tar.gz"
-      sha256 "6d9e446a56ca7f0718673bcedb067ec5458038a60b8d29abc1a99b57700b23bf"
+      sha256 "a45c97f94a5fe7bc4fda744114c59303fccbb49bc11b5b3fa7f5ad6bcadf8f11"
 
       def install
         bin.install "cadence-hooks"
@@ -37,7 +37,7 @@ class CadenceHooks < Formula
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
       url "https://github.com/cameronsjo/cadence-hooks/releases/download/v#{version}/cadence-hooks-v#{version}-linux-aarch64.tar.gz"
-      sha256 "853e3232e911460011d8f3e281b567f7a7591ff121b760abe93135899c119c2c"
+      sha256 "2afeb62bc5fbad082ed68babcfac2978af2741a25858f2a4a2ee08b43b93386b"
 
       def install
         bin.install "cadence-hooks"
