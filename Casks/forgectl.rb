@@ -7,15 +7,15 @@ cask "forgectl" do
     end
   end
 
-  version "0.70.0"
+  version "0.71.0"
 
   on_macos do
     on_arm do
-      sha256 "14dde68957f1a170e0a5598848e22943994433ac84bf0aad92d06162ea6b4ae9"
+      sha256 "7134e4edff921e4e41f6ed659a0f02552d4c431a4b1c84f07d59984d9b1edd85"
       url "https://github.com/cameronsjo/forgectl/releases/download/v#{version}/forgectl_#{version}_darwin_arm64.tar.gz"
     end
     on_intel do
-      sha256 "8575f541b8e5c2dba1796a7d2808002c7a474e799e5c5f928d28a9140e4797d4"
+      sha256 "52a3749f40f12d498ada15b836cba01bfa761d1113d7accf1f1915b380bf5b51"
       url "https://github.com/cameronsjo/forgectl/releases/download/v#{version}/forgectl_#{version}_darwin_amd64.tar.gz"
     end
   end
@@ -27,6 +27,9 @@ cask "forgectl" do
   livecheck do
     skip "Auto-generated on release."
   end
+  depends_on formula: [
+      "terminal-notifier",
+    ]
 
   binary "forgectl"
   binary "forgectl-bless-helper"
